@@ -3,8 +3,15 @@
 #include <stdlib.h>
 #include <termios.h>
 
-#define ROWS 20
-#define COLS 10
+#define ROWS 10
+#define COLS 20
+
+
+#define LEFT   68
+#define RIGHT  67
+#define ROTATE 65
+#define DOWN   66
+#define EXIT   113
 
 // Ici on declare notre champe de jeux, on va l'utiliser pour sauvegarder les positions de chaque piece.
 char FIELD[ROWS][COLS] = {0};
@@ -16,6 +23,14 @@ typedef struct
   char y;
   char *piece;
 }current_piece;
+
+
+
+
+
+
+
+
 
 
 // # ==== Terminal Input mode ==== #
@@ -60,16 +75,57 @@ set_input_mode (void)
 int main(void)
 {
   char option = 1;
+  FIELD[5][5] = 1;
   char ch;
   set_input_mode();
   while (option)
     {
-      // Obtenir la touche
+      // =================== afficher le champ de jeux =========
+      // a ameilleurer
+      printf("\e[?25l");
+      printf(":");
+
+      for (size_t i =0; i<COLS; i++) {
+	printf("-");
+      }
+      printf(":\n");
+
+      for (size_t j=0; j<ROWS; j++){
+	printf(":");
+	for (size_t i =0; i<COLS; i++) {
+	  if (FIELD[j][i] == 1) {
+	    printf("#");
+	  }
+	  else {
+	    printf(".");
+	  }
+	}
+	printf(":\n");
+      }
+      printf(":");
+      for (size_t i =0; i<COLS; i++) {
+	printf("-");
+      }
+      printf(":\n");
+      // Move cursor back to top
+      printf("\e[%iA", ROWS+2); 
+
+
+
+      
+      
+      // ==================== Obtenir la touche =================
       read (STDIN_FILENO, &ch, 1);
-      if (ch == 113)          /* q */
+      if (ch == EXIT)
         break;
-      else
-	printf("%d\n", ch);
+      if (ch == LEFT)
+	printf("LEFT");
+      if (ch == ROTATE)
+	printf("ROTATE");
+      if (ch == RIGHT)
+	printf("RIGHT");
+      if (ch == DOWN)
+	printf("DOWN");
     }
  
   
