@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
+#include <string.h>
 
 #define ROWS 10
 #define COLS 20
@@ -17,14 +18,23 @@
 char FIELD[ROWS][COLS] = {0};
 
 struct termios saved_attributes;
+
+char* piece = {{{0, 0, 0, 0},{0, 0, 0, 0},{1, 1, 0, 0},{1, 1, 0, 0}}
+    ,{{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0}}
+    ,{{0, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{1, 1, 0, 0}}
+    ,{{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 1, 1},{0, 1, 1, 0}}
+    ,{{0, 0, 0, 0},{0, 0, 0, 0},{1, 1, 0, 0},{0, 1, 1, 0}}
+    ,{{0, 0, 0, 0},{0, 1, 0, 0},{0, 1, 0, 0},{1, 1, 0, 0}}
+    ,{{0, 0, 0, 0},{0, 0, 0, 0},{1, 1, 1, 0},{0, 1, 0, 0}}};
+
 typedef struct
 {
   char x;
   char y;
-  char *piece;
-}current_piece;
+  char piece[4][4];
+}Current_piece;
 
-
+Current_piece current_piece;
 
 
 
@@ -66,20 +76,8 @@ set_input_mode (void)
 }
 
 
-
-
-
-
-// # ==== MAIN ==== #
-
-int main(void)
+void afficher(void)
 {
-  char option = 1;
-  FIELD[5][5] = 1;
-  char ch;
-  set_input_mode();
-  while (option)
-    {
       // =================== afficher le champ de jeux =========
       // a ameilleurer
       printf("\e[?25l");
@@ -90,12 +88,17 @@ int main(void)
       }
       printf(":\n");
 
-      for (size_t j=0; j<ROWS; j++){
+      for (size_t j=ROWS; j>0; j--){
 	printf(":");
-	for (size_t i =0; i<COLS; i++) {
+	for (size_t i=0; i<COLS; i++) {
 	  if (FIELD[j][i] == 1) {
 	    printf("#");
 	  }
+	  else if ((((current_piece.x + 3) >= j) && (j >= current_piece.x)) && (((current_piece.y + 3) >= i) && (i >= current_piece.y)))
+	    {
+	      printf("%d\n", current_piece.piece[0]);
+	      
+	      }
 	  else {
 	    printf(".");
 	  }
@@ -110,22 +113,81 @@ int main(void)
       // Move cursor back to top
       printf("\e[%iA", ROWS+2); 
 
+}
+
+void init_piece(void)
+{
+  current_piece.x = ROWS;
+  current_piece.y = COLS/2;
+  for (int i = 0; )
+  
+}
 
 
+// # ==== MAIN ==== #
+
+int main(void)
+{
+  char option = 1;
+  char ch;
+  set_input_mode();
+  int time = 1000;
+
+  init_piece();
+  
+  while (option)
+    {
+      afficher();
+	
+      
+
+      //printf("%d\n",piece[0][3][2]);
+      //      usleep(game_speed);
+
+
+      if (current_piece.x == 0)
+	{
+	  /* for (int x = 0; x < 3; x++) */
+	  /*   { */
+	  /*     for (int y = 0; y < 3; y++) */
+	  /* 	{ */
+	  /* 	  FIELD[current_piece.x][current_piece.y] = 1; */
+	  /* 	} */
+	  /*   } */
+	  FIELD[current_piece.x][current_piece.y] = 1;
+	  init_piece();
+	}
+
+      if (time >= 1000) {
+	current_piece.x--;
+	time = 0;
+      }
       
       
       // ==================== Obtenir la touche =================
-      read (STDIN_FILENO, &ch, 1);
-      if (ch == EXIT)
-        break;
-      if (ch == LEFT)
-	printf("LEFT");
-      if (ch == ROTATE)
-	printf("ROTATE");
-      if (ch == RIGHT)
-	printf("RIGHT");
-      if (ch == DOWN)
-	printf("DOWN");
+      //read (STDIN_FILENO, &ch, 1);
+
+      struct timeval tv;
+      fd_set fds;
+      tv.tv_sec = 0;
+      tv.tv_usec = 0;
+      FD_ZERO(&fds);
+      FD_SET(STDIN_FILENO, &fds);
+      select(STDIN_FILENO +1, &fds, NULL, NULL, &tv);
+      if(FD_ISSET(STDIN_FILENO, &fds)) {
+	char ch = getchar();
+	if (ch == EXIT)
+	  break;
+	if (ch == LEFT)
+	  current_piece.y--;
+	if (ch == ROTATE)
+	  printf("ROTATE");
+	if (ch == RIGHT)
+	  current_piece.y++;
+	if (ch == DOWN)
+	  printf("DOWN");
+      }
+      time++;
     }
  
   
