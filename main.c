@@ -20,7 +20,7 @@ char FIELD[ROWS][COLS];
 
 struct termios saved_attributes;
 
-char piece[7][4][4] = {{{0, 0, 0, 0},{0, 0, 0, 0},{1, 1, 0, 0},{1, 1, 0, 0}}
+char piece[7][4][4] = {{{1, 1, 0, 0},{1, 1, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
     ,{{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0}}
     ,{{0, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{1, 1, 0, 0}}
     ,{{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 1, 1},{0, 1, 1, 0}}
@@ -117,7 +117,10 @@ void game_field_init(void)
     {
       for (int j = 0; j<COLS; j++)
 	{
-	  FIELD[i][j] = 0;
+	  if (i > 0)
+	    FIELD[i][j] = 0;
+	  else
+	    FIELD[i][j] = 1;
 	}
     }
 }
@@ -125,7 +128,7 @@ void game_field_init(void)
 
 Current init_piece(Current current_piece)
 {
-  current_piece.x = ROWS;
+  current_piece.x = ROWS-1;
   current_piece.y = COLS/2;
  
   for (int i = 0; i < 4; ++i) {
@@ -152,35 +155,28 @@ int main(void)
   while (option)
     {
       afficher(current_piece);
-
+      //printf("%d\n", current_piece.x);
       // ================= verification de la colision ================
-      if (current_piece.x == 0)
+      if ((current_piece.piece[0][0] == 1) && (FIELD[current_piece.x-1][current_piece.y] == 1))
 	{
 	  for (int x = 0; x < 4; x++)
 	    {
 	      for (int y = 0; y < 4; y++)
 		{
-		  printf("%d %d\n", current_piece.x+1, current_piece.y);
+		  //printf("%d %d = %d %d == %d %d\n", current_piece.x, current_piece.y, x, y, current_piece.x + x, current_piece.y + y);
 		  if (current_piece.piece[x][y] == 1) 
-		    FIELD[(current_piece.x - 1 + x)][current_piece.y + y] = 1;
+		    FIELD[current_piece.x + x][current_piece.y + y] = 1;
 		}
 	    }
-	  for (int i = 0; i<ROWS; i++)
-	    {
-	      for (int j = 0; j<COLS; j++)
-		{
-		  printf("%d ", FIELD[i][j]);
-		}
-	      printf("\n");
-	    }
-	  //break;
-	  //FIELD[current_piece.x][current_piece.y] = 1;
 	  current_piece = init_piece(current_piece);
 	}
 
+      
+      
       if (time >= GAME_SPEED) {
+	//usleep(GAME_SPEED*100);
 	current_piece.x--;
-	time = 0;
+	time = 0;	
       }
       
       
@@ -198,12 +194,17 @@ int main(void)
 	char ch = getchar();
 	if (ch == EXIT)
 	  break;
-	if (ch == LEFT)
-	  current_piece.y--;
+	if (ch == LEFT) {
+	  if (current_piece.y > 0)
+	    current_piece.y--;
+	}
 	if (ch == ROTATE)
 	  printf("ROTATE");
 	if (ch == RIGHT)
-	  current_piece.y++;
+	  {
+	    if (current_piece.y+4 < COLS)
+	      current_piece.y++;
+	  }
 	if (ch == DOWN)
 	  printf("DOWN");
       }
