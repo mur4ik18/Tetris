@@ -111,6 +111,39 @@ void afficher(Current current_piece)
 
 }
 
+int check_collision(Current current_piece)
+{
+  // ======== droit ========
+  for (int x = 0; x < 4; x++) {
+     for (int y = 0; y < 4; y++)
+       {
+	 //printf("%d %d = %d %d == %d %d\n", current_piece.x, current_piece.y, x, y, current_piece.x + x, current_piece.y + y);
+	 if ((current_piece.piece[x][y] == 1) && (FIELD[current_piece.x + x][current_piece.y +y + 1] == 1))
+	   return 3;
+       }
+     }
+  // ======== bas ==========
+  for (int x = 0; x < 4; x++) {
+     for (int y = 0; y < 4; y++)
+       {
+	 //printf("%d %d = %d %d == %d %d\n", current_piece.x, current_piece.y, x, y, current_piece.x + x, current_piece.y + y);
+	 if ((current_piece.piece[x][y] == 1) && (FIELD[current_piece.x + x -1][current_piece.y +y] == 1))
+	   return 1;
+       }
+     }
+  // ======== gauche =======
+  for (int x = 0; x < 4; x++) {
+     for (int y = 0; y < 4; y++)
+       {
+	 //printf("%d %d = %d %d == %d %d\n", current_piece.x, current_piece.y, x, y, current_piece.x + x, current_piece.y + y);
+	 if ((current_piece.piece[x][y] == 1) && (FIELD[current_piece.x + x][current_piece.y - 1] == 1))
+	   return 2;
+       }
+     }
+  return 0;
+}
+
+
 void game_field_init(void)
 {
   for (int i = 0; i<ROWS; i++)
@@ -119,6 +152,10 @@ void game_field_init(void)
 	{
 	  if (i > 0)
 	    FIELD[i][j] = 0;
+	  else if (j == 0)
+	    FIELD[i][j] = 1;
+	  else if (j == COLS -1)
+	    FIELD[i][j] = 1;
 	  else
 	    FIELD[i][j] = 1;
 	}
@@ -157,7 +194,7 @@ int main(void)
       afficher(current_piece);
       //printf("%d\n", current_piece.x);
       // ================= verification de la colision ================
-      if ((current_piece.piece[0][0] == 1) && (FIELD[current_piece.x-1][current_piece.y] == 1))
+      if (check_collision(current_piece) == 1)
 	{
 	  for (int x = 0; x < 4; x++)
 	    {
@@ -195,14 +232,14 @@ int main(void)
 	if (ch == EXIT)
 	  break;
 	if (ch == LEFT) {
-	  if (current_piece.y > 0)
+	  if (check_collision(current_piece) != 2)
 	    current_piece.y--;
 	}
 	if (ch == ROTATE)
 	  printf("ROTATE");
 	if (ch == RIGHT)
 	  {
-	    if (current_piece.y+4 < COLS)
+	    if (check_collision(current_piece) != 3)
 	      current_piece.y++;
 	  }
 	if (ch == DOWN)
