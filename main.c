@@ -13,13 +13,14 @@
 #define ROTATE 65
 #define DOWN   66
 #define EXIT   113
+#define GAME_SPEED 5000
 
 // Ici on declare notre champe de jeux, on va l'utiliser pour sauvegarder les positions de chaque piece.
-char FIELD[ROWS][COLS] = {0};
+char FIELD[ROWS][COLS];
 
 struct termios saved_attributes;
 
-char* piece = {{{0, 0, 0, 0},{0, 0, 0, 0},{1, 1, 0, 0},{1, 1, 0, 0}}
+char piece[7][4][4] = {{{0, 0, 0, 0},{0, 0, 0, 0},{1, 1, 0, 0},{1, 1, 0, 0}}
     ,{{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0}}
     ,{{0, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{1, 1, 0, 0}}
     ,{{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 1, 1},{0, 1, 1, 0}}
@@ -32,16 +33,7 @@ typedef struct
   char x;
   char y;
   char piece[4][4];
-}Current_piece;
-
-Current_piece current_piece;
-
-
-
-
-
-
-
+}Current;
 
 // # ==== Terminal Input mode ==== #
 void
@@ -54,7 +46,6 @@ void
 set_input_mode (void)
 {
   struct termios tattr;
-  char *name;
 
   /* Make sure stdin is a terminal. */
   if (!isatty (STDIN_FILENO))
@@ -75,8 +66,7 @@ set_input_mode (void)
   tcsetattr (STDIN_FILENO, TCSAFLUSH, &tattr);
 }
 
-
-void afficher(void)
+void afficher(Current current_piece)
 {
       // =================== afficher le champ de jeux =========
       // a ameilleurer
@@ -96,9 +86,15 @@ void afficher(void)
 	  }
 	  else if ((((current_piece.x + 3) >= j) && (j >= current_piece.x)) && (((current_piece.y + 3) >= i) && (i >= current_piece.y)))
 	    {
-	      printf("%d\n", current_piece.piece[0]);
-	      
+	      if (current_piece.piece[j - current_piece.x][i - current_piece.y]){
+		printf("0");
 	      }
+	      else
+		{
+		  printf(".");
+		}
+	    }
+	      
 	  else {
 	    printf(".");
 	  }
@@ -115,12 +111,29 @@ void afficher(void)
 
 }
 
-void init_piece(void)
+void game_field_init(void)
+{
+  for (int i = 0; i<ROWS; i++)
+    {
+      for (int j = 0; j<COLS; j++)
+	{
+	  FIELD[i][j] = 0;
+	}
+    }
+}
+
+
+Current init_piece(Current current_piece)
 {
   current_piece.x = ROWS;
   current_piece.y = COLS/2;
-  for (int i = 0; )
-  
+ 
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      current_piece.piece[i][j] = piece[0][i][j];
+    }
+  }
+  return current_piece;
 }
 
 
@@ -130,35 +143,42 @@ int main(void)
 {
   char option = 1;
   char ch;
+  game_field_init();
   set_input_mode();
-  int time = 1000;
-
-  init_piece();
+  int time = GAME_SPEED;
+  Current current_piece;
+  current_piece =  init_piece(current_piece);
   
   while (option)
     {
-      afficher();
-	
-      
+      afficher(current_piece);
 
-      //printf("%d\n",piece[0][3][2]);
-      //      usleep(game_speed);
-
-
+      // ================= verification de la colision ================
       if (current_piece.x == 0)
 	{
-	  /* for (int x = 0; x < 3; x++) */
-	  /*   { */
-	  /*     for (int y = 0; y < 3; y++) */
-	  /* 	{ */
-	  /* 	  FIELD[current_piece.x][current_piece.y] = 1; */
-	  /* 	} */
-	  /*   } */
-	  FIELD[current_piece.x][current_piece.y] = 1;
-	  init_piece();
+	  for (int x = 0; x < 4; x++)
+	    {
+	      for (int y = 0; y < 4; y++)
+		{
+		  printf("%d %d\n", current_piece.x+1, current_piece.y);
+		  if (current_piece.piece[x][y] == 1) 
+		    FIELD[(current_piece.x - 1 + x)][current_piece.y + y] = 1;
+		}
+	    }
+	  for (int i = 0; i<ROWS; i++)
+	    {
+	      for (int j = 0; j<COLS; j++)
+		{
+		  printf("%d ", FIELD[i][j]);
+		}
+	      printf("\n");
+	    }
+	  //break;
+	  //FIELD[current_piece.x][current_piece.y] = 1;
+	  current_piece = init_piece(current_piece);
 	}
 
-      if (time >= 1000) {
+      if (time >= GAME_SPEED) {
 	current_piece.x--;
 	time = 0;
       }
