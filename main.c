@@ -21,12 +21,12 @@ char FIELD[ROWS][COLS];
 struct termios saved_attributes;
 
 char piece[7][4][4] = {{{1, 1, 0, 0},{1, 1, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
-    ,{{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0}}
-    ,{{0, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{1, 1, 0, 0}}
-    ,{{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 1, 1},{0, 1, 1, 0}}
-    ,{{0, 0, 0, 0},{0, 0, 0, 0},{1, 1, 0, 0},{0, 1, 1, 0}}
-    ,{{0, 0, 0, 0},{0, 1, 0, 0},{0, 1, 0, 0},{1, 1, 0, 0}}
-    ,{{0, 0, 0, 0},{0, 0, 0, 0},{1, 1, 1, 0},{0, 1, 0, 0}}};
+                       ,{{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0}}
+                       ,{{0, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{1, 1, 0, 0}}
+                       ,{{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 1, 1},{0, 1, 1, 0}}
+                       ,{{0, 0, 0, 0},{0, 0, 0, 0},{1, 1, 0, 0},{0, 1, 1, 0}}
+                       ,{{0, 0, 0, 0},{0, 1, 0, 0},{0, 1, 0, 0},{1, 1, 0, 0}}
+                       ,{{0, 0, 0, 0},{0, 0, 0, 0},{1, 1, 1, 0},{0, 1, 0, 0}}};
 
 typedef struct
 {
@@ -68,78 +68,73 @@ set_input_mode (void)
 
 void afficher(Current current_piece)
 {
-      // =================== afficher le champ de jeux =========
-      // a ameilleurer
-      printf("\e[?25l");
-      printf(":");
+  // =================== afficher le champ de jeux =========
+  // a ameilleurer
+  printf("\e[?25l");
+  printf(":");
+  for (size_t i =0; i<COLS; i++) {
+    printf("-");
+  }
+  printf(":\n");
 
-      for (size_t i =0; i<COLS; i++) {
-	printf("-");
+  for (size_t j=ROWS; j>0; j--){
+    printf(":");
+    for (size_t i=0; i<COLS; i++) {
+      if (FIELD[j][i] == 1) {
+        printf("#");
       }
-      printf(":\n");
-
-      for (size_t j=ROWS; j>0; j--){
-	printf(":");
-	for (size_t i=0; i<COLS; i++) {
-	  if (FIELD[j][i] == 1) {
-	    printf("#");
-	  }
-	  else if ((((current_piece.x + 3) >= j) && (j >= current_piece.x)) && (((current_piece.y + 3) >= i) && (i >= current_piece.y)))
-	    {
-	      if (current_piece.piece[j - current_piece.x][i - current_piece.y]){
-		printf("0");
-	      }
-	      else
-		{
-		  printf(".");
-		}
-	    }
-	      
-	  else {
-	    printf(".");
-	  }
-	}
-	printf(":\n");
+      else if ((((current_piece.x + 3) >= j) && (j >= current_piece.x)) && (((current_piece.y + 3) >= i) && (i >= current_piece.y)))
+        {
+          if (current_piece.piece[j - current_piece.x][i - current_piece.y])
+            printf("0");
+          else
+            printf(".");
+        }
+      else {
+        printf(".");
       }
-      printf(":");
-      for (size_t i =0; i<COLS; i++) {
-	printf("-");
-      }
-      printf(":\n");
-      // Move cursor back to top
-      printf("\e[%iA", ROWS+2); 
+    }
+    printf(":\n");
+  }
+  printf(":");
+  for (size_t i =0; i<COLS; i++) {
+    printf("-");
+  }
+  printf(":\n");
+  // Move cursor back to top
+  printf("\e[%iA", ROWS+2); 
 
 }
 
 int check_collision(Current current_piece)
 {
-  // ======== droit ========
-  for (int x = 0; x < 4; x++) {
-     for (int y = 0; y < 4; y++)
-       {
-	 //printf("%d %d = %d %d == %d %d\n", current_piece.x, current_piece.y, x, y, current_piece.x + x, current_piece.y + y);
-	 if ((current_piece.piece[x][y] == 1) && (FIELD[current_piece.x + x][current_piece.y +y + 1] == 1))
-	   return 3;
-       }
-     }
   // ======== bas ==========
   for (int x = 0; x < 4; x++) {
-     for (int y = 0; y < 4; y++)
-       {
-	 //printf("%d %d = %d %d == %d %d\n", current_piece.x, current_piece.y, x, y, current_piece.x + x, current_piece.y + y);
-	 if ((current_piece.piece[x][y] == 1) && (FIELD[current_piece.x + x -1][current_piece.y +y] == 1))
-	   return 1;
-       }
-     }
+    for (int y = 0; y < 4; y++)
+      {
+        //printf("%d %d = %d %d == %d %d\n", current_piece.x, current_piece.y, x, y, current_piece.x + x, current_piece.y + y);
+        if ((current_piece.piece[x][y] == 1) && (FIELD[current_piece.x + x -1][current_piece.y +y] == 1))
+          return 1;
+      }
+  }
+  // ======== droit ========
+  for (int x = 0; x < 4; x++) {
+    for (int y = 0; y < 4; y++)
+      {
+        //printf("%d %d = %d %d == %d %d\n", current_piece.x, current_piece.y, x, y, current_piece.x + x, current_piece.y + y);
+        if ((current_piece.piece[x][y] == 1) && (FIELD[current_piece.x + x][current_piece.y +y + 1] == 1))
+          return 3;
+      }
+  }
   // ======== gauche =======
   for (int x = 0; x < 4; x++) {
-     for (int y = 0; y < 4; y++)
-       {
-	 //printf("%d %d = %d %d == %d %d\n", current_piece.x, current_piece.y, x, y, current_piece.x + x, current_piece.y + y);
-	 if ((current_piece.piece[x][y] == 1) && (FIELD[current_piece.x + x][current_piece.y - 1] == 1))
-	   return 2;
-       }
-     }
+    for (int y = 0; y < 4; y++)
+      {
+        //printf("%d %d = %d %d == %d %d\n", current_piece.x, current_piece.y, x, y, current_piece.x + x, current_piece.y + y);
+        if ((current_piece.piece[x][y] == 1) && (FIELD[current_piece.x + x][current_piece.y - 1] == 1))
+          return 2;
+      }
+  }
   return 0;
 }
 
@@ -149,16 +144,16 @@ void game_field_init(void)
   for (int i = 0; i<ROWS; i++)
     {
       for (int j = 0; j<COLS; j++)
-	{
-	  if (i > 0)
-	    FIELD[i][j] = 0;
-	  else if (j == 0)
-	    FIELD[i][j] = 1;
-	  else if (j == COLS -1)
-	    FIELD[i][j] = 1;
-	  else
-	    FIELD[i][j] = 1;
-	}
+        {
+          if (j == 0)
+            FIELD[i][j] = 1;
+          else if (j == COLS -1)
+            FIELD[i][j] = 1;
+          else if (i > 0)
+            FIELD[i][j] = 0;
+          else
+            FIELD[i][j] = 1;
+        }
     }
 }
 
@@ -174,6 +169,42 @@ Current init_piece(Current current_piece)
     }
   }
   return current_piece;
+}
+
+void fin(void)
+{
+  printf("\e[?25l");  // Hide the cursor
+
+  // Clear the screen
+  for (int x = 0; x < ROWS + 2; x++)
+    {
+      for (int y = 0; y < COLS + 2; y++)
+        {
+          printf(" ");
+        }
+      printf("\n");
+    }
+
+  // Move cursor to the center of the screen
+  printf("\e[%iA", ROWS + 2);
+  printf("\e[%iC", COLS / 2 - 5);
+
+  printf("GAME OVER!\n");
+
+  // Wait for user input to exit
+  printf("Press 'q' to quit...\n");
+  char ch;
+  while (1)
+    {
+      if (read(STDIN_FILENO, &ch, 1) > 0)
+        {
+          if (ch == 'q')
+            {
+              printf("\e[?25h");  // Show the cursor
+              exit(EXIT_SUCCESS);
+            }
+        }
+    }
 }
 
 
@@ -195,28 +226,32 @@ int main(void)
       //printf("%d\n", current_piece.x);
       // ================= verification de la colision ================
       if (check_collision(current_piece) == 1)
-	{
-	  for (int x = 0; x < 4; x++)
-	    {
-	      for (int y = 0; y < 4; y++)
-		{
-		  //printf("%d %d = %d %d == %d %d\n", current_piece.x, current_piece.y, x, y, current_piece.x + x, current_piece.y + y);
-		  if (current_piece.piece[x][y] == 1) 
-		    FIELD[current_piece.x + x][current_piece.y + y] = 1;
-		}
-	    }
-	  current_piece = init_piece(current_piece);
-	}
+        {
+          for (int x = 0; x < 4; x++)
+            {
+              for (int y = 0; y < 4; y++)
+                {
+                  //printf("%d %d = %d %d == %d %d\n", current_piece.x, current_piece.y, x, y, current_piece.x + x, current_piece.y + y);
+                  if (current_piece.piece[x][y] == 1) 
+                    FIELD[current_piece.x + x][current_piece.y + y] = 1;
+                }
+            }
+          current_piece = init_piece(current_piece);
+          for (int y = 1; y<COLS-1; y++)
+            {
+              if (FIELD[ROWS-1][y] == 1) {
+                fin();
+              }
+            }
+        }
 
-      
-      
+
       if (time >= GAME_SPEED) {
-	//usleep(GAME_SPEED*100);
-	current_piece.x--;
-	time = 0;	
+        //usleep(GAME_SPEED*100);
+        current_piece.x--;
+        time = 0;
       }
-      
-      
+
       // ==================== Obtenir la touche =================
       //read (STDIN_FILENO, &ch, 1);
 
@@ -228,26 +263,26 @@ int main(void)
       FD_SET(STDIN_FILENO, &fds);
       select(STDIN_FILENO +1, &fds, NULL, NULL, &tv);
       if(FD_ISSET(STDIN_FILENO, &fds)) {
-	char ch = getchar();
-	if (ch == EXIT)
-	  break;
-	if (ch == LEFT) {
-	  if (check_collision(current_piece) != 2)
-	    current_piece.y--;
-	}
-	if (ch == ROTATE)
-	  printf("ROTATE");
-	if (ch == RIGHT)
-	  {
-	    if (check_collision(current_piece) != 3)
-	      current_piece.y++;
-	  }
-	if (ch == DOWN)
-	  printf("DOWN");
+        char ch = getchar();
+        if (ch == EXIT)
+          break;
+        if (ch == LEFT) {
+          if (check_collision(current_piece) != 2)
+            current_piece.y--;
+        }
+        if (ch == ROTATE)
+          printf("ROTATE");
+        if (ch == RIGHT)
+          {
+            if (check_collision(current_piece) != 3)
+              current_piece.y++;
+          }
+        if (ch == DOWN)
+          printf("DOWN");
       }
       time++;
     }
- 
-  
+
+  printf("\e[?25h");
   return 1;
 }
