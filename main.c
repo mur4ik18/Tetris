@@ -191,24 +191,23 @@ void fastDown(Current *current_piece) {
 
 Current init_piece(Current current_piece)
 {
-  current_piece.x = ROWS-1;
-  current_piece.y = COLS/2;
-
-
-  // Seed the random number generator with the current time
-  srand(time(NULL));
+  current_piece.x = ROWS - 1;
+  current_piece.y = COLS / 2;
 
   // Generate a random number between 0 and 6
   int randomNumber = rand() % 7;
 
-
-  for (int i = 0; i < 4; ++i) {
-    for (int j = 0; j < 4; ++j) {
-      current_piece.piece[i][j] = piece[randomNumber][i][j];
+  // Initialize the piece with the random piece
+  for (int i = 0; i < 4; ++i)
+    {
+      for (int j = 0; j < 4; ++j)
+        {
+          current_piece.piece[i][j] = piece[randomNumber][i][j];
+        }
     }
-  }
   return current_piece;
 }
+
 
 void fin(void)
 {
@@ -253,8 +252,10 @@ void fin(void)
 
 int main(void)
 {
+  // Seed the random number generator with the current time
+  srand(time(NULL));
+
   char option = 1;
-  char ch;
   game_field_init();
   set_input_mode();
   int time = GAME_SPEED;
