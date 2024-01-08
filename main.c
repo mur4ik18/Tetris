@@ -1,28 +1,50 @@
+/*
+  Tetris Game in C
+
+  This program implements a simple Tetris game in C using a terminal interface.
+
+  Controls:
+  - Left Arrow: Move the current piece left
+  - Right Arrow: Move the current piece right
+  - Down Arrow: Move the current piece down
+  - Space Bar: Rotate the current piece
+  - 'q': Quit the game
+
+  Rules:
+  - Complete rows to score points and clear the row
+  - If the pieces reach the top of the screen, the game ends
+
+  Author: Alex Kotov
+  Date: January 7, 2024
+*/
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <termios.h>
 #include <string.h>
 #include <time.h>
+#include <sys/time.h>
 
 #define ROWS 15
 #define COLS 20
 
-
+// Define constants for keyboard inputs
 #define LEFT   68
 #define RIGHT  67
 #define ROTATE 32
 #define DOWN   66
 #define EXIT   113
-#define GAME_SPEED 5000
+#define GAME_SPEED 600
 #define PIECE_SIZE 4
 
-// Ici on declare notre champe de jeux, on va l'utiliser pour sauvegarder les positions de chaque piece.
+// Game field representing the play area
 char FIELD[ROWS][COLS];
-
 
 struct termios saved_attributes;
 
+
+// Tetris piece patterns
 char piece[7][4][4] = {{{1, 1, 0, 0},{1, 1, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
                        ,{{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0}}
                        ,{{1, 1, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{0, 0, 0, 0}}
@@ -31,6 +53,7 @@ char piece[7][4][4] = {{{1, 1, 0, 0},{1, 1, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
                        ,{{1, 1, 0, 0},{0, 1, 0, 0},{0, 1, 0, 0},{0, 0, 0, 0}}
                        ,{{0, 1, 0, 0},{1, 1, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0}}};
 
+// Structure to represent the current Tetris piece
 typedef struct
 {
   char x;
@@ -39,14 +62,14 @@ typedef struct
 }Current;
 
 // # ==== Terminal Input mode ==== #
-void
-reset_input_mode (void)
+// Function to set terminal input mode
+void reset_input_mode (void)
 {
   tcsetattr (STDIN_FILENO, TCSANOW, &saved_attributes);
 }
 
-void
-set_input_mode (void)
+// Function to set terminal input mode
+void set_input_mode (void)
 {
   struct termios tattr;
 
@@ -69,13 +92,19 @@ set_input_mode (void)
   tcsetattr (STDIN_FILENO, TCSAFLUSH, &tattr);
 }
 
-void afficher(Current current_piece)
+// Function to display the game field and current piece
+void afficher(Current current_piece, int score)
 {
+  // Print score
+  printf("SCORE - %d\n", score);
+
   // =================== afficher le champ de jeux =========
   // a ameilleurer
   printf("\e[?25l");
+ 
 
-  for (size_t j=ROWS-1; j>0; j--){
+  // print field
+  for (size_t j=ROWS-2; j>0; j--){
     printf(":");
     for (size_t i=0; i<COLS; i++) {
       if (FIELD[j][i] == 1) {
@@ -104,6 +133,7 @@ void afficher(Current current_piece)
 
 }
 
+// Function to check for collisions with the game field
 int check_collision(Current current_piece)
 {
   // ======== bas ==========
@@ -137,24 +167,36 @@ int check_collision(Current current_piece)
 }
 
 
+// Function to initialize the game field.
 void game_field_init(void)
 {
-  for (int i = 0; i<ROWS; i++)
+    // Iterate over each row in the game field.
+    for (int i = 0; i < ROWS; i++)
     {
-      for (int j = 0; j<COLS; j++)
+        // Iterate over each column in the game field.
+        for (int j = 0; j < COLS; j++)
         {
-          if (j == 0)
-            FIELD[i][j] = 1;
-          else if (j == COLS -1)
-            FIELD[i][j] = 1;
-          else if (i > 0)
-            FIELD[i][j] = 0;
-          else
-            FIELD[i][j] = 1;
+            // Check if the current column is the leftmost column.
+            if (j == 0)
+                FIELD[i][j] = 1; // Set the leftmost column to 1, representing the left boundary.
+
+            // Check if the current column is the rightmost column.
+            else if (j == COLS - 1)
+                FIELD[i][j] = 1; // Set the rightmost column to 1, representing the right boundary.
+
+            // Check if the current row is not the topmost row.
+            else if (i > 0)
+                FIELD[i][j] = 0; // Set the inner cells to 0, indicating an empty space.
+
+            // If the current row is the topmost row, set the cell to 1.
+            else
+                FIELD[i][j] = 1; // Set the topmost row to 1, representing the top boundary.
         }
     }
 }
 
+
+// Function to rotate the current Tetris piece
 void rotate(Current *current_piece) {
     char temp[4][4];
 
@@ -173,13 +215,48 @@ void rotate(Current *current_piece) {
             temp[i][3 - j] = swap;
         }
     }
-    // If rotation is valid, update the piece
+
+    // Find the leftmost position of '1'
+    int leftmostColumn = 3;
+
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            current_piece->piece[i][j] = temp[i][j];
+            if (temp[i][j] == 1) {
+                leftmostColumn = (j < leftmostColumn) ? j : leftmostColumn;
+            }
+        }
+    }
+
+    // Shift the piece to the left
+    for (int i = 0; i < 4; i++) {
+        for (int j = leftmostColumn; j < 4; j++) {
+            current_piece->piece[i][j - leftmostColumn] = temp[i][j];
+        }
+        for (int j = 4 - leftmostColumn; j < 4; j++) {
+            current_piece->piece[i][j] = 0;  // Clear the remaining columns
         }
     }
 }
+
+
+// Function to check if a rotation is possible
+int can_rotate(Current current_piece)
+{
+  Current temp_piece = current_piece;
+
+  // Perform a temporary rotation
+  rotate(&temp_piece);
+
+  // Check for collisions after the rotation
+  if (!check_collision(temp_piece))
+    {
+      return 1;  // Rotation is possible
+    }
+
+  return 0;  // Rotation is not possible
+}
+
+
 // Function to move the piece down as fast as possible
 void fastDown(Current *current_piece) {
   while (!check_collision(*current_piece)) {
@@ -188,7 +265,7 @@ void fastDown(Current *current_piece) {
   current_piece->x++;  // Adjust for the last valid position
 }
 
-
+// Function to initialize a new Tetris piece
 Current init_piece(Current current_piece)
 {
   current_piece.x = ROWS - 1;
@@ -208,7 +285,47 @@ Current init_piece(Current current_piece)
   return current_piece;
 }
 
+// Function to check for completed lines and clear them
+int check_line(void)
+{
+  int linesCleared = 0;
 
+  for (int x = ROWS - 1; x >= 1; x--)
+    {
+      int row = 0;
+      for (int y = 1; y < COLS + 1; y++)
+        {
+          if (FIELD[x][y] == 1)
+            row++;
+        }
+
+      if (row == COLS)
+        {
+          linesCleared++;
+
+          // Clear the line
+          for (int y = 1; y < COLS -1; y++)
+            {
+              FIELD[x][y] = 0;
+            }
+
+          // Move down the lines above the cleared line
+          for (int i = x; ROWS > i; i++)
+            {
+              for (int j = 1; j < COLS - 1; j++)
+                {
+                  FIELD[i][j] = FIELD[i +  1][j];
+                }
+            }
+
+          x++; // Consider the same row in the next iteration
+        }
+    }
+
+  return linesCleared;
+}
+
+// Function to display the game over screen
 void fin(void)
 {
   printf("\e[?25l");  // Hide the cursor
@@ -223,7 +340,7 @@ void fin(void)
       printf("\n");
     }
 
-  // Move cursor to the center of the screen
+  // Move cursor to the center of the screen 
   printf("\e[%iA", ROWS + 2);
   printf("\e[%iC", COLS / 2 - 5);
 
@@ -247,27 +364,88 @@ void fin(void)
     }
 }
 
+// Function to handle user input and update the game state
+int handle_input(Current *current_piece, int *score) {
+    struct timeval tv;
+    fd_set fds;
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+    FD_ZERO(&fds);
+    FD_SET(STDIN_FILENO, &fds);
 
-// # ==== MAIN ==== #
+    // Use select to wait for input with a timeout of 0
+    select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv);
 
+    // Check if there is input available
+    if (FD_ISSET(STDIN_FILENO, &fds)) {
+        char ch = getchar();
+        // Check for user inputs and update game state accordingly
+        if (ch == EXIT) {
+            // Exit the game loop if the user presses the exit key
+          return 1;
+        } else if ((ch == 27) && (getchar() == 91)) {  // Check for escape sequences
+            switch (getchar()) {
+                case LEFT:  // Left arrow key
+                  if ((check_collision(*current_piece) != 2) && (check_collision(*current_piece) != 1))
+                    current_piece->y--;
+                  break;
+                case RIGHT:  // Right arrow key
+                  if ((check_collision(*current_piece) != 3) && (check_collision(*current_piece) != 1))
+                    current_piece->y++;
+                  break;
+            case DOWN:
+              fastDown(current_piece);
+              break;
+            }
+        } else if (ch == ROTATE) {
+            // Rotate the piece if rotation is allowed
+            if (can_rotate(*current_piece)) {
+                rotate(current_piece);
+            }
+        }
+    }
+    return 0;
+}
+
+// Function to get the current time in milliseconds
+long long current_time_in_milliseconds(void) {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return (tv.tv_sec * 1000LL) + (tv.tv_usec / 1000LL);
+}
+
+// Main function to run the Tetris game
 int main(void)
 {
+  // score variable
+  int score = 0;
   // Seed the random number generator with the current time
   srand(time(NULL));
 
+  // variable what I use for go out from game loop
   char option = 1;
+  // Init game FIELD
+  // Every element of GAME FIELD = 0
+  // but borders = 1
   game_field_init();
+  // Turn off CANONICAL MODE
+  // clear terminal
   set_input_mode();
-  int time = GAME_SPEED;
+  // Current piece init
   Current current_piece;
-  current_piece =  init_piece(current_piece);
+  current_piece = init_piece(current_piece);
+
+  // Variable to store the last time the piece was moved
+  long long last_move_time = current_time_in_milliseconds();
+
+  // GAME loop
   while (option)
     {
-      afficher(current_piece);
+      afficher(current_piece, score);
       //printf("%d\n", current_piece.x);
       // ================= verification de la colision ================
 
-      if (time >= GAME_SPEED) {
+      if (current_time_in_milliseconds() - last_move_time >= GAME_SPEED) {
         //usleep(GAME_SPEED*100);
         if (check_collision(current_piece) == 1)
           {
@@ -289,38 +467,19 @@ int main(void)
               }
           }
         current_piece.x--;
-        time = 0;
+        last_move_time = current_time_in_milliseconds();
       }
 
-      // ==================== Obtenir la touche =================
-      //read (STDIN_FILENO, &ch, 1);
+      // Handle user input and update game state
+      if (handle_input(&current_piece, &score))
+        break;
 
-      struct timeval tv;
-      fd_set fds;
-      tv.tv_sec = 0;
-      tv.tv_usec = 0;
-      FD_ZERO(&fds);
-      FD_SET(STDIN_FILENO, &fds);
-      select(STDIN_FILENO +1, &fds, NULL, NULL, &tv);
-      if(FD_ISSET(STDIN_FILENO, &fds)) {
-        char ch = getchar();
-        if (ch == EXIT)
-          break;
-        if (ch == LEFT) {
-          if ((check_collision(current_piece) != 2) && (check_collision(current_piece) != 1))
-            current_piece.y--;
+      int linesCleared = check_line();
+      if (linesCleared > 0)
+        {
+          // Update the score
+          score += linesCleared;
         }
-        if (ch == ROTATE)
-          rotate(&current_piece);
-        if (ch == RIGHT)
-          {
-            if ((check_collision(current_piece) != 3) && (check_collision(current_piece) != 1))
-              current_piece.y++;
-          }
-        if (ch == DOWN)
-          fastDown(&current_piece);
-      }
-      time++;
     }
 
   printf("\e[?25h");
