@@ -17,121 +17,15 @@
   Author: Alex Kotov
   Date: January 7, 2024
 */
-
+#include "main.h"
+#include "terminal.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <termios.h>
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
 
-#define ROWS 15
-#define COLS 20
-
-// Define constants for keyboard inputs
-#define LEFT   68
-#define RIGHT  67
-#define ROTATE 32
-#define DOWN   66
-#define EXIT   113
-#define GAME_SPEED 600
-#define PIECE_SIZE 4
-
-// Game field representing the play area
-char FIELD[ROWS][COLS];
-
-struct termios saved_attributes;
-
-
-// Tetris piece patterns
-char piece[7][4][4] = {{{1, 1, 0, 0},{1, 1, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
-                       ,{{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0}}
-                       ,{{1, 1, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{0, 0, 0, 0}}
-                       ,{{0, 1, 1, 0},{0, 0, 1, 1},{0, 0, 0, 0},{0, 0, 0, 0}}
-                       ,{{0, 1, 1, 0},{1, 1, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
-                       ,{{1, 1, 0, 0},{0, 1, 0, 0},{0, 1, 0, 0},{0, 0, 0, 0}}
-                       ,{{0, 1, 0, 0},{1, 1, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0}}};
-
-// Structure to represent the current Tetris piece
-typedef struct
-{
-  char x;
-  char y;
-  char piece[4][4];
-}Current;
-
-// # ==== Terminal Input mode ==== #
-// Function to set terminal input mode
-void reset_input_mode (void)
-{
-  tcsetattr (STDIN_FILENO, TCSANOW, &saved_attributes);
-}
-
-// Function to set terminal input mode
-void set_input_mode (void)
-{
-  struct termios tattr;
-
-  /* Make sure stdin is a terminal. */
-  if (!isatty (STDIN_FILENO))
-    {
-      fprintf (stderr, "Not a terminal.\n");
-      exit (EXIT_FAILURE);
-    }
-
-  /* Save the terminal attributes so we can restore them later. */
-  tcgetattr (STDIN_FILENO, &saved_attributes);
-  atexit (reset_input_mode);
-
-  /* Set the funny terminal modes. */
-  tcgetattr (STDIN_FILENO, &tattr);
-  tattr.c_lflag &= ~(ICANON|ECHO); /* Clear ICANON and ECHO. */
-  tattr.c_cc[VMIN] = 1;
-  tattr.c_cc[VTIME] = 0;
-  tcsetattr (STDIN_FILENO, TCSAFLUSH, &tattr);
-}
-
-// Function to display the game field and current piece
-void afficher(Current current_piece, int score)
-{
-  // Print score
-  printf("SCORE - %d\n", score);
-
-  // =================== afficher le champ de jeux =========
-  // a ameilleurer
-  printf("\e[?25l");
- 
-
-  // print field
-  for (size_t j=ROWS-2; j>0; j--){
-    printf(":");
-    for (size_t i=0; i<COLS; i++) {
-      if (FIELD[j][i] == 1) {
-        printf("#");
-      }
-      else if ((((current_piece.x + 3) >= j) && (j >= current_piece.x)) && (((current_piece.y + 3) >= i) && (i >= current_piece.y)))
-        {
-          if (current_piece.piece[j - current_piece.x][i - current_piece.y])
-            printf("0");
-          else
-            printf(".");
-        }
-      else {
-        printf(".");
-      }
-    }
-    printf(":\n");
-  }
-  printf(":");
-  for (size_t i =0; i<COLS; i++) {
-    printf("-");
-  }
-  printf(":\n");
-  // Move cursor back to top
-  printf("\e[%iA", ROWS); 
-
-}
 
 // Function to check for collisions with the game field
 int check_collision(Current current_piece)
@@ -259,10 +153,10 @@ int can_rotate(Current current_piece)
 
 // Function to move the piece down as fast as possible
 void fastDown(Current *current_piece) {
-  while (!check_collision(*current_piece)) {
+  while (check_collision(*current_piece) != 1) {
     current_piece->x--;
   }
-  current_piece->x++;  // Adjust for the last valid position
+  //current_piece->x++;  // Adjust for the last valid position
 }
 
 // Function to initialize a new Tetris piece
@@ -325,44 +219,7 @@ int check_line(void)
   return linesCleared;
 }
 
-// Function to display the game over screen
-void fin(void)
-{
-  printf("\e[?25l");  // Hide the cursor
 
-  // Clear the screen
-  for (int x = 0; x < ROWS + 2; x++)
-    {
-      for (int y = 0; y < COLS + 2; y++)
-        {
-          printf(" ");
-        }
-      printf("\n");
-    }
-
-  // Move cursor to the center of the screen 
-  printf("\e[%iA", ROWS + 2);
-  printf("\e[%iC", COLS / 2 - 5);
-
-  printf("GAME OVER!\n");
-
-  // Wait for user input to exit
-  printf("Press 'q' to quit...\n");
-  char ch;
-  while (1)
-    {
-      if (read(STDIN_FILENO, &ch, 1) > 0)
-        {
-          if (ch == 'q')
-            {
-              printf("\e[?25h");  // Show the cursor
-              exit(EXIT_SUCCESS);
-            }
-          else
-            printf("%d\n", ch);
-        }
-    }
-}
 
 // Function to handle user input and update the game state
 int handle_input(Current *current_piece, int *score) {
@@ -430,7 +287,7 @@ int main(void)
   game_field_init();
   // Turn off CANONICAL MODE
   // clear terminal
-  set_input_mode();
+  set_input_mode(saved_attributes);
   // Current piece init
   Current current_piece;
   current_piece = init_piece(current_piece);
@@ -442,7 +299,6 @@ int main(void)
   while (option)
     {
       afficher(current_piece, score);
-      //printf("%d\n", current_piece.x);
       // ================= verification de la colision ================
 
       if (current_time_in_milliseconds() - last_move_time >= GAME_SPEED) {
@@ -453,7 +309,6 @@ int main(void)
               {
                 for (int y = 0; y < 4; y++)
                   {
-                    //printf("%d %d = %d %d == %d %d\n", current_piece.x, current_piece.y, x, y, current_piece.x + x, current_piece.y + y);
                     if (current_piece.piece[x][y] == 1) 
                       FIELD[current_piece.x + x][current_piece.y + y] = 1;
                   }
@@ -484,4 +339,85 @@ int main(void)
 
   printf("\e[?25h");
   return 1;
+}
+
+
+// Function to display the game field and current piece
+void afficher(Current current_piece, int score)
+{
+  // Print score
+  printf("SCORE - %d\n", score);
+
+  // =================== afficher le champ de jeux =========
+  // a ameilleurer
+  printf("\e[?25l");
+ 
+
+  // print field
+  for (size_t j=ROWS-2; j>0; j--){
+    printf(":");
+    for (size_t i=0; i<COLS; i++) {
+      if (FIELD[j][i] == 1) {
+        printf("#");
+      }
+      else if ((((current_piece.x + 3) >= j) && (j >= current_piece.x)) && (((current_piece.y + 3) >= i) && (i >= current_piece.y)))
+        {
+          if (current_piece.piece[j - current_piece.x][i - current_piece.y])
+            printf("0");
+          else
+            printf(".");
+        }
+      else {
+        printf(".");
+      }
+    }
+    printf(":\n");
+  }
+  printf(":");
+  for (size_t i =0; i<COLS; i++) {
+    printf("-");
+  }
+  printf(":\n");
+  // Move cursor back to top
+  printf("\e[%iA", ROWS); 
+
+}
+
+// Function to display the game over screen
+void fin(void)
+{
+  printf("\e[?25l");  // Hide the cursor
+
+  // Clear the screen
+  for (int x = 0; x < ROWS + 2; x++)
+    {
+      for (int y = 0; y < COLS + 2; y++)
+        {
+          printf(" ");
+        }
+      printf("\n");
+    }
+
+  // Move cursor to the center of the screen 
+  printf("\e[%iA", ROWS + 2);
+  printf("\e[%iC", COLS / 2 - 5);
+
+  printf("GAME OVER!\n");
+
+  // Wait for user input to exit
+  printf("Press 'q' to quit...\n");
+  char ch;
+  while (1)
+    {
+      if (read(STDIN_FILENO, &ch, 1) > 0)
+        {
+          if (ch == 'q')
+            {
+              printf("\e[?25h");  // Show the cursor
+              exit(EXIT_SUCCESS);
+            }
+          else
+            printf("%d\n", ch);
+        }
+    }
 }
