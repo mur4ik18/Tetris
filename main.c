@@ -69,6 +69,9 @@ int main(void)
   Current current_piece;
   current_piece = init_piece(piece, current_piece);
 
+  // leveling
+  int level = 1;
+  int GAME_SPEED = 600;
   // Variable to store the last time the piece was moved
   long long last_move_time = current_time_in_milliseconds();
 
@@ -100,6 +103,13 @@ int main(void)
           }
         current_piece.x--;
         last_move_time = current_time_in_milliseconds();
+
+        // Check for level up based on the score
+        if (score >= level * LEVEL_UP_THRESHOLD) {
+          level++;
+          // Adjust game speed based on the new level
+          GAME_SPEED -= LEVEL_SPEED_INCREASE;
+        }
       }
 
       // Handle user input and update game state

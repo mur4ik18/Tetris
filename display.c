@@ -1,4 +1,5 @@
 #include "display.h"
+#include "movement.h"
 #include "main.h"
 #include <unistd.h>
 #include <stdio.h>
@@ -11,11 +12,19 @@ void afficher(char FIELD[][COLS], Current current_piece, int score)
 {
   // Print score
   printf("SCORE - %d\n", score);
+  
 
   // =================== Display the game field ====================
   // Hide the cursor
   printf("\e[?25l");
- 
+
+  // Display the landing preview
+  // Simulate fast down and display the landing preview
+  Current preview_piece = current_piece;
+  while (check_collision(FIELD, preview_piece) != 1) {
+    preview_piece.x--;
+  }
+
   // Print field
   for (int j = ROWS - 2; j > 0; j--) {
     printf(":");
@@ -26,9 +35,17 @@ void afficher(char FIELD[][COLS], Current current_piece, int score)
                  (((current_piece.y + 3) >= i) && (i >= current_piece.y))) {
         // Display the current piece
         if (current_piece.piece[j - current_piece.x][i - current_piece.y]) {
-          printf("0");  // Display filled cell for the current piece
+          printf(COLOR_MAGENTA "0" COLOR_RESET);  // Display filled cell for the current piece
         } else {
           printf(".");  // Display empty cell for the current piece
+        }
+      } else if ((((preview_piece.x + 3) >= j) && (j >= preview_piece.x)) &&
+                 (((preview_piece.y + 3) >= i) && (i >= preview_piece.y))) {
+        // Display the preview piece
+        if (preview_piece.piece[j - preview_piece.x][i - preview_piece.y]) {
+          printf(COLOR_CYAN "*" COLOR_RESET);  // Display filled cell for the preview piece
+        } else {
+          printf(".");  // Display empty cell for the preview piece
         }
       } else {
         printf(".");  // Display empty cell for the game field

@@ -11,8 +11,11 @@
 #define ROTATE 32
 #define DOWN   66
 #define EXIT   113
-#define GAME_SPEED 600
 #define PIECE_SIZE 4
+
+
+#define LEVEL_UP_THRESHOLD 5
+#define LEVEL_SPEED_INCREASE 5
 
 // Structure to represent the current Tetris piece
 typedef struct
