@@ -22,10 +22,4 @@ typedef struct
   char piece[PIECE_SIZE][PIECE_SIZE];
 }Current;
 
-
-
-// Function declarations
-void afficher();
-void fin();
-
 #endif /* MAIN_H */
