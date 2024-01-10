@@ -22,4 +22,5 @@ typedef struct
   char piece[PIECE_SIZE][PIECE_SIZE];
 }Current;
 
+long long current_time_in_milliseconds();
 #endif /* MAIN_H */
