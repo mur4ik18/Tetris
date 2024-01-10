@@ -132,23 +132,27 @@ int handle_input(char FIELD[][COLS], Current *current_piece, int *score) {
         } else if ((ch == 27) && (getchar() == 91)) {  // Check for escape sequences
             switch (getchar()) {
                 case LEFT:  // Left arrow key
+                  // Move the piece to the left if no collision is detected
                   if ((check_collision(FIELD, *current_piece) != 2) && (check_collision(FIELD, *current_piece) != 1))
                     current_piece->y--;
                   break;
                 case RIGHT:  // Right arrow key
+                  // Move the piece to the right if no collision is detected
                   if ((check_collision(FIELD, *current_piece) != 3) && (check_collision(FIELD, *current_piece) != 1))
                     current_piece->y++;
                   break;
-            case DOWN:
-              fastDown(FIELD, current_piece);
-              break;
+                case DOWN:
+                  // Move the piece down rapidly if allowed
+                  fastDown(FIELD, current_piece);
+                  break;
             }
         } else if (ch == ROTATE) {
             // Rotate the piece if rotation is allowed
-          if (can_rotate(FIELD, *current_piece)) {
+            if (can_rotate(FIELD, *current_piece)) {
                 rotate(current_piece);
             }
         }
     }
     return 0;
 }
+

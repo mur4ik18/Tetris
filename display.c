@@ -12,40 +12,42 @@ void afficher(char FIELD[][COLS], Current current_piece, int score)
   // Print score
   printf("SCORE - %d\n", score);
 
-  // =================== afficher le champ de jeux =========
-  // a ameilleurer
+  // =================== Display the game field ====================
+  // Hide the cursor
   printf("\e[?25l");
  
-
-  // print field
-  for (int j=ROWS-2; j>0; j--){
+  // Print field
+  for (int j = ROWS - 2; j > 0; j--) {
     printf(":");
-    for (int i=0; i<COLS; i++) {
+    for (int i = 0; i < COLS; i++) {
       if (FIELD[j][i] == 1) {
-        printf("#");
-      }
-      else if ((((current_piece.x + 3) >= j) && (j >= current_piece.x)) && (((current_piece.y + 3) >= i) && (i >= current_piece.y)))
-        {
-          if (current_piece.piece[j - current_piece.x][i - current_piece.y])
-            printf("0");
-          else
-            printf(".");
+        printf("#");  // Display filled cell for game field boundary
+      } else if ((((current_piece.x + 3) >= j) && (j >= current_piece.x)) &&
+                 (((current_piece.y + 3) >= i) && (i >= current_piece.y))) {
+        // Display the current piece
+        if (current_piece.piece[j - current_piece.x][i - current_piece.y]) {
+          printf("0");  // Display filled cell for the current piece
+        } else {
+          printf(".");  // Display empty cell for the current piece
         }
-      else {
-        printf(".");
+      } else {
+        printf(".");  // Display empty cell for the game field
       }
     }
     printf(":\n");
   }
   printf(":");
-  for (int i =0; i<COLS; i++) {
-    printf("-");
+  for (int i = 0; i < COLS; i++) {
+    printf("-");  // Display boundary for the bottom of the game field
   }
   printf(":\n");
-  // Move cursor back to top
+  // Move cursor back to the top
   printf("\e[%iA", ROWS); 
 
+  // Show the cursor
+  printf("\e[?25h");
 }
+
 
 // Function to display the game over screen
 void game_over(void)
@@ -57,16 +59,16 @@ void game_over(void)
     {
       for (int y = 0; y < COLS + 2; y++)
         {
-          printf(" ");
+          printf(" ");  // Print empty spaces to clear the screen
         }
-      printf("\n");
+      printf("\n");  // Move to the next line
     }
 
   // Move cursor to the center of the screen 
-  printf("\e[%iA", ROWS + 2);
-  printf("\e[%iC", COLS / 2 - 5);
+  printf("\e[%iA", ROWS + 2);  // Move the cursor up
+  printf("\e[%iC", COLS / 2 - 5);  // Move the cursor to the center
 
-  printf("GAME OVER!\n");
+  printf("GAME OVER!\n");  // Display the "GAME OVER!" message
 
   // Wait for user input to exit
   printf("Press 'q' to quit...\n");
@@ -78,11 +80,12 @@ void game_over(void)
           if (ch == 'q')
             {
               printf("\e[?25h");  // Show the cursor
-              exit(EXIT_SUCCESS);
+              exit(EXIT_SUCCESS);  // Exit the program with success status
             }
           else
-            printf("%d\n", ch);
+            printf("%d\n", ch);  // Print the ASCII value of the pressed key
         }
     }
 }
+
 

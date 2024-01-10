@@ -34,45 +34,52 @@
 int main(void)
 {
   struct termios saved_attributes;
+
   // Game field representing the play area
   char FIELD[ROWS][COLS];
+
   // Tetris piece patterns
-  char piece[7][PIECE_SIZE][PIECE_SIZE] = {{{1, 1, 0, 0},{1, 1, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
-                                           ,{{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0}}
-                                           ,{{1, 1, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{0, 0, 0, 0}}
-                                           ,{{0, 1, 1, 0},{0, 0, 1, 1},{0, 0, 0, 0},{0, 0, 0, 0}}
-                                           ,{{0, 1, 1, 0},{1, 1, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
-                                           ,{{1, 1, 0, 0},{0, 1, 0, 0},{0, 1, 0, 0},{0, 0, 0, 0}}
-                                           ,{{0, 1, 0, 0},{1, 1, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0}}};
-  // score variable
+  char piece[7][PIECE_SIZE][PIECE_SIZE] = {
+    {{1, 1, 0, 0},{1, 1, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}},
+    {{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0}},
+    {{1, 1, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{0, 0, 0, 0}},
+    {{0, 1, 1, 0},{0, 0, 1, 1},{0, 0, 0, 0},{0, 0, 0, 0}},
+    {{0, 1, 1, 0},{1, 1, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}},
+    {{1, 1, 0, 0},{0, 1, 0, 0},{0, 1, 0, 0},{0, 0, 0, 0}},
+    {{0, 1, 0, 0},{1, 1, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
+  };
+
+  // Score variable
   int score = 0;
+
   // Seed the random number generator with the current time
   srand(time(NULL));
 
-  // variable what I use for go out from game loop
+  // Variable used to exit from the game loop
   char option = 1;
-  // Init game FIELD
-  // Every element of GAME FIELD = 0
-  // but borders = 1
+
+  // Initialize game FIELD
+  // Every element of the game FIELD is set to 0, but borders are set to 1
   game_field_init(FIELD);
-  // Turn off CANONICAL MODE
-  // clear terminal
+
+  // Turn off CANONICAL MODE and clear terminal
   set_input_mode(saved_attributes);
-  // Current piece init
+
+  // Initialize current piece
   Current current_piece;
   current_piece = init_piece(piece, current_piece);
 
   // Variable to store the last time the piece was moved
   long long last_move_time = current_time_in_milliseconds();
 
-  // GAME loop
+  // Game loop
   while (option)
     {
+      // Display the game field and current piece
       afficher(FIELD, current_piece, score);
-      // ================= verification de la colision ================
 
+      // Check collision and move the piece down
       if (current_time_in_milliseconds() - last_move_time >= GAME_SPEED) {
-        //usleep(GAME_SPEED*100);
         if (check_collision(FIELD, current_piece) == 1)
           {
             for (int x = 0; x < 4; x++)
@@ -84,7 +91,7 @@ int main(void)
                   }
               }
             current_piece = init_piece(piece, current_piece);
-            for (int y = 1; y<COLS-1; y++)
+            for (int y = 1; y < COLS-1; y++)
               {
                 if (FIELD[ROWS-1][y] == 1) {
                   game_over();
@@ -99,6 +106,7 @@ int main(void)
       if (handle_input(FIELD, &current_piece, &score))
         break;
 
+      // Check and clear completed lines
       int linesCleared = check_line(FIELD);
       if (linesCleared > 0)
         {
@@ -107,9 +115,10 @@ int main(void)
         }
     }
 
-  printf("\e[?25h");
+  printf("\e[?25h");  // Show the cursor
   return 1;
 }
+
 
 // Function to get the current time in milliseconds
 long long current_time_in_milliseconds(void) {

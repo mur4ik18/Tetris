@@ -40,43 +40,53 @@ void game_field_init(char FIELD[][COLS])
 // Function to initialize a new Tetris piece
 Current init_piece(char piece[][PIECE_SIZE][PIECE_SIZE], Current current_piece)
 {
-  current_piece.x = ROWS - 1;
-  current_piece.y = COLS / 2;
+  // Set the initial position of the new Tetris piece
+  current_piece.x = ROWS - 1;         // Set the initial row (bottom of the game field)
+  current_piece.y = COLS / 2;         // Set the initial column (center of the game field)
 
-  // Generate a random number between 0 and 6
+  // Generate a random number between 0 and 6 to select a random Tetris piece
   int randomNumber = rand() % 7;
 
-  // Initialize the piece with the random piece
+  // Initialize the current piece with the randomly selected piece
   for (int i = 0; i < 4; ++i)
     {
       for (int j = 0; j < 4; ++j)
         {
+          // Copy the structure of the selected piece to the current piece
           current_piece.piece[i][j] = piece[randomNumber][i][j];
         }
     }
+
+  // Return the initialized current piece
   return current_piece;
 }
+
 
 // Function to check for completed lines and clear them
 int check_line(char FIELD[][COLS])
 {
   int linesCleared = 0;
 
+  // Iterate through each row from the bottom to the top
   for (int x = ROWS - 1; x >= 1; x--)
     {
       int row = 0;
+
+      // Check each cell in the current row
       for (int y = 1; y < COLS + 1; y++)
         {
+          // Count the filled cells in the current row
           if (FIELD[x][y] == 1)
             row++;
         }
 
+      // If the entire row is filled, clear it
       if (row == COLS)
         {
           linesCleared++;
 
-          // Clear the line
-          for (int y = 1; y < COLS -1; y++)
+          // Clear the cells in the completed line
+          for (int y = 1; y < COLS - 1; y++)
             {
               FIELD[x][y] = 0;
             }
@@ -86,6 +96,7 @@ int check_line(char FIELD[][COLS])
             {
               for (int j = 1; j < COLS - 1; j++)
                 {
+                  // Shift the cells from the line above to the cleared line
                   FIELD[i][j] = FIELD[i +  1][j];
                 }
             }
@@ -94,5 +105,6 @@ int check_line(char FIELD[][COLS])
         }
     }
 
-  return linesCleared;
+  return linesCleared; // Return the number of cleared lines
 }
+
