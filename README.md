@@ -107,4 +107,9 @@ Nos pieces vont étre déplacés chque "tick" (chaque 1 sec)
 
 Si current_piece a touché le sol ou une autre pice - nous allons le lesé sur ce place. Nous allons mettre une autre piece dans current piece at nous allons anuller x et y
 
+# Install
+Download make
+https://gnuwin32.sourceforge.net/packages/make.htm
+
+Install make
 
