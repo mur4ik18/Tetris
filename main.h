@@ -22,19 +22,7 @@ typedef struct
   char piece[PIECE_SIZE][PIECE_SIZE];
 }Current;
 
-struct termios saved_attributes;
 
-// Tetris piece patterns
-char piece[7][PIECE_SIZE][PIECE_SIZE] = {{{1, 1, 0, 0},{1, 1, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
-                       ,{{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0}}
-                       ,{{1, 1, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{0, 0, 0, 0}}
-                       ,{{0, 1, 1, 0},{0, 0, 1, 1},{0, 0, 0, 0},{0, 0, 0, 0}}
-                       ,{{0, 1, 1, 0},{1, 1, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
-                       ,{{1, 1, 0, 0},{0, 1, 0, 0},{0, 1, 0, 0},{0, 0, 0, 0}}
-                       ,{{0, 1, 0, 0},{1, 1, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0}}};
-
-// Game field representing the play area
-char FIELD[ROWS][COLS];
 
 // Function declarations
 void afficher();

@@ -28,7 +28,7 @@
 
 
 // Function to check for collisions with the game field
-int check_collision(Current current_piece)
+int check_collision(char FIELD[][COLS], Current current_piece)
 {
   // ======== bas ==========
   for (int x = 0; x < 4; x++) {
@@ -62,7 +62,7 @@ int check_collision(Current current_piece)
 
 
 // Function to initialize the game field.
-void game_field_init(void)
+void game_field_init(char FIELD[][COLS])
 {
     // Iterate over each row in the game field.
     for (int i = 0; i < ROWS; i++)
@@ -72,19 +72,19 @@ void game_field_init(void)
         {
             // Check if the current column is the leftmost column.
             if (j == 0)
-                FIELD[i][j] = 1; // Set the leftmost column to 1, representing the left boundary.
+              FIELD[i][j] = 1; // Set the leftmost column to 1, representing the left boundary.
 
             // Check if the current column is the rightmost column.
             else if (j == COLS - 1)
-                FIELD[i][j] = 1; // Set the rightmost column to 1, representing the right boundary.
+              FIELD[i][j] = 1; // Set the rightmost column to 1, representing the right boundary.
 
             // Check if the current row is not the topmost row.
             else if (i > 0)
-                FIELD[i][j] = 0; // Set the inner cells to 0, indicating an empty space.
+              FIELD[i][j] = 0; // Set the inner cells to 0, indicating an empty space.
 
             // If the current row is the topmost row, set the cell to 1.
             else
-                FIELD[i][j] = 1; // Set the topmost row to 1, representing the top boundary.
+              FIELD[i][j] = 1; // Set the topmost row to 1, representing the top boundary.
         }
     }
 }
@@ -134,7 +134,7 @@ void rotate(Current *current_piece) {
 
 
 // Function to check if a rotation is possible
-int can_rotate(Current current_piece)
+int can_rotate(char FIELD[][COLS], Current current_piece)
 {
   Current temp_piece = current_piece;
 
@@ -142,7 +142,7 @@ int can_rotate(Current current_piece)
   rotate(&temp_piece);
 
   // Check for collisions after the rotation
-  if (!check_collision(temp_piece))
+  if (!check_collision(FIELD, temp_piece))
     {
       return 1;  // Rotation is possible
     }
@@ -152,15 +152,15 @@ int can_rotate(Current current_piece)
 
 
 // Function to move the piece down as fast as possible
-void fastDown(Current *current_piece) {
-  while (check_collision(*current_piece) != 1) {
+void fastDown(char FIELD[][COLS], Current *current_piece) {
+  while (check_collision(FIELD, *current_piece) != 1) {
     current_piece->x--;
   }
   //current_piece->x++;  // Adjust for the last valid position
 }
 
 // Function to initialize a new Tetris piece
-Current init_piece(Current current_piece)
+Current init_piece(char piece[][PIECE_SIZE][PIECE_SIZE], Current current_piece)
 {
   current_piece.x = ROWS - 1;
   current_piece.y = COLS / 2;
@@ -180,7 +180,7 @@ Current init_piece(Current current_piece)
 }
 
 // Function to check for completed lines and clear them
-int check_line(void)
+int check_line(char FIELD[][COLS])
 {
   int linesCleared = 0;
 
@@ -222,7 +222,7 @@ int check_line(void)
 
 
 // Function to handle user input and update the game state
-int handle_input(Current *current_piece, int *score) {
+int handle_input(char FIELD[][COLS], Current *current_piece, int *score) {
     struct timeval tv;
     fd_set fds;
     tv.tv_sec = 0;
@@ -243,20 +243,20 @@ int handle_input(Current *current_piece, int *score) {
         } else if ((ch == 27) && (getchar() == 91)) {  // Check for escape sequences
             switch (getchar()) {
                 case LEFT:  // Left arrow key
-                  if ((check_collision(*current_piece) != 2) && (check_collision(*current_piece) != 1))
+                  if ((check_collision(FIELD, *current_piece) != 2) && (check_collision(FIELD, *current_piece) != 1))
                     current_piece->y--;
                   break;
                 case RIGHT:  // Right arrow key
-                  if ((check_collision(*current_piece) != 3) && (check_collision(*current_piece) != 1))
+                  if ((check_collision(FIELD, *current_piece) != 3) && (check_collision(FIELD, *current_piece) != 1))
                     current_piece->y++;
                   break;
             case DOWN:
-              fastDown(current_piece);
+              fastDown(FIELD, current_piece);
               break;
             }
         } else if (ch == ROTATE) {
             // Rotate the piece if rotation is allowed
-            if (can_rotate(*current_piece)) {
+          if (can_rotate(FIELD, *current_piece)) {
                 rotate(current_piece);
             }
         }
@@ -274,6 +274,17 @@ long long current_time_in_milliseconds(void) {
 // Main function to run the Tetris game
 int main(void)
 {
+  struct termios saved_attributes;
+  // Game field representing the play area
+  char FIELD[ROWS][COLS];
+  // Tetris piece patterns
+  char piece[7][PIECE_SIZE][PIECE_SIZE] = {{{1, 1, 0, 0},{1, 1, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
+                                           ,{{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0}}
+                                           ,{{1, 1, 0, 0},{1, 0, 0, 0},{1, 0, 0, 0},{0, 0, 0, 0}}
+                                           ,{{0, 1, 1, 0},{0, 0, 1, 1},{0, 0, 0, 0},{0, 0, 0, 0}}
+                                           ,{{0, 1, 1, 0},{1, 1, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0}}
+                                           ,{{1, 1, 0, 0},{0, 1, 0, 0},{0, 1, 0, 0},{0, 0, 0, 0}}
+                                           ,{{0, 1, 0, 0},{1, 1, 1, 0},{0, 0, 0, 0},{0, 0, 0, 0}}};
   // score variable
   int score = 0;
   // Seed the random number generator with the current time
@@ -284,13 +295,13 @@ int main(void)
   // Init game FIELD
   // Every element of GAME FIELD = 0
   // but borders = 1
-  game_field_init();
+  game_field_init(FIELD);
   // Turn off CANONICAL MODE
   // clear terminal
   set_input_mode(saved_attributes);
   // Current piece init
   Current current_piece;
-  current_piece = init_piece(current_piece);
+  current_piece = init_piece(piece, current_piece);
 
   // Variable to store the last time the piece was moved
   long long last_move_time = current_time_in_milliseconds();
@@ -298,12 +309,12 @@ int main(void)
   // GAME loop
   while (option)
     {
-      afficher(current_piece, score);
+      afficher(FIELD, current_piece, score);
       // ================= verification de la colision ================
 
       if (current_time_in_milliseconds() - last_move_time >= GAME_SPEED) {
         //usleep(GAME_SPEED*100);
-        if (check_collision(current_piece) == 1)
+        if (check_collision(FIELD, current_piece) == 1)
           {
             for (int x = 0; x < 4; x++)
               {
@@ -313,7 +324,7 @@ int main(void)
                       FIELD[current_piece.x + x][current_piece.y + y] = 1;
                   }
               }
-            current_piece = init_piece(current_piece);
+            current_piece = init_piece(piece, current_piece);
             for (int y = 1; y<COLS-1; y++)
               {
                 if (FIELD[ROWS-1][y] == 1) {
@@ -326,10 +337,10 @@ int main(void)
       }
 
       // Handle user input and update game state
-      if (handle_input(&current_piece, &score))
+      if (handle_input(FIELD, &current_piece, &score))
         break;
 
-      int linesCleared = check_line();
+      int linesCleared = check_line(FIELD);
       if (linesCleared > 0)
         {
           // Update the score
@@ -343,7 +354,7 @@ int main(void)
 
 
 // Function to display the game field and current piece
-void afficher(Current current_piece, int score)
+void afficher(char FIELD[][COLS], Current current_piece, int score)
 {
   // Print score
   printf("SCORE - %d\n", score);
