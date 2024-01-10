@@ -93,7 +93,7 @@ int can_rotate(char FIELD[][COLS], Current current_piece)
   rotate(&temp_piece);
 
   // Check for collisions after the rotation
-  if (!check_collision(FIELD, temp_piece))
+  if (check_collision(FIELD, temp_piece) != 1)
     {
       return 1;  // Rotation is possible
     }
@@ -148,7 +148,7 @@ int handle_input(char FIELD[][COLS], Current *current_piece, int *score) {
             }
         } else if (ch == ROTATE) {
             // Rotate the piece if rotation is allowed
-            if (can_rotate(FIELD, *current_piece)) {
+            if (can_rotate(FIELD, *current_piece) ) {
                 rotate(current_piece);
             }
         }
