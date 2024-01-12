@@ -99,7 +99,7 @@ Mais tout d'abbord nous allons construire une champe de jeux
 
 Pour prendre des touches de joueurs nous allons chenger le mode de terminal en non-canonical mode. Nous alons lire input charracter par charracter et si nous avons une de touches suivants:
 
-← ↑ → ↓ ou q  
+← espace → ↓ ou q  
 
 Nous allons faire qqch.
 
@@ -108,8 +108,11 @@ Nos pieces vont étre déplacés chque "tick" (chaque 1 sec)
 Si current_piece a touché le sol ou une autre pice - nous allons le lesé sur ce place. Nous allons mettre une autre piece dans current piece at nous allons anuller x et y
 
 # Install
-Download make
-https://gnuwin32.sourceforge.net/packages/make.htm
-
 Install make
+
+Then write it near makefile:
+make claen
+make
+Lance le jeu
+./tetris
 
